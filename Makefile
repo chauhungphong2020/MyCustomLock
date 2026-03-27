@@ -8,4 +8,3 @@ MyCustomLock_FILES = Tweak.x
 MyCustomLock_CFLAGS = -fobjc-arc
 
 include $(THEOS)/makefiles/tweak.mk
- 
