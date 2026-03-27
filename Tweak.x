@@ -3,7 +3,7 @@
 void checkLicense(NSString *userKey) {
     NSString *deviceId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     
-    // THAY LINK GOOGLE SCRIPT CỦA BẠN VÀO DÒNG DƯỚI ĐÂY
+    // THAY LINK GOOGLE SCRIPT CỦA BẠN VÀO GIỮA HAI DẤU " "
     NSString *yourScriptUrl = @"https://script.google.com/macros/s/AKfycbykXu0eesXx8WdPwPnOQrIM7qZSYmcoz16rtH5stDJNuEv8Nn7YXQgEGMCRRfEbZh503w/exec";
     
     NSString *server = [NSString stringWithFormat:@"%@?key=%@&udid=%@", yourScriptUrl, userKey, deviceId];
@@ -22,22 +22,23 @@ void checkLicense(NSString *userKey) {
 %ctor {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         UIWindow *window = nil;
-        if (@available(iOS 13.0, *)) {
-            NSSet *scenes = [[UIApplication sharedApplication] connectedScenes];
-            for (UIScene *scene in scenes) {
-                if ([scene isKindOfClass:[UIWindowScene class]] && scene.activationState == UISceneActivationStateForegroundActive) {
-                    window = ((UIWindowScene *)scene).windows.firstObject;
-                    break;
-                }
+        // Cách lấy Window mới nhất cho iOS 13-18+
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if ([scene isKindOfClass:[UIWindowScene class]] && scene.activationState == UISceneActivationStateForegroundActive) {
+                window = ((UIWindowScene *)scene).windows.firstObject;
+                break;
             }
-        } else {
-            window = [[UIApplication sharedApplication] keyWindow];
         }
 
+        if (!window) window = [UIApplication sharedApplication].windows.firstObject;
         if (!window) return;
 
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"XÁC THỰC" message:@"Vui lòng nhập Key quản lý" preferredStyle:UIAlertControllerStyleAlert];
-        [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) { tf.placeholder = @"Nhập Key..."; tf.secureTextEntry = YES; }];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"XÁC THỰC" message:@"Vui lòng nhập Key để mở khóa ứng dụng" preferredStyle:UIAlertControllerStyleAlert];
+        [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) { 
+            tf.placeholder = @"Nhập Key tại đây..."; 
+            tf.secureTextEntry = NO; 
+        }];
+        
         [alert addAction:[UIAlertAction actionWithTitle:@"KÍCH HOẠT" style:UIAlertActionStyleDefault handler:^(id act) {
             checkLicense(alert.textFields.firstObject.text);
         }]];
