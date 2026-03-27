@@ -1,4 +1,4 @@
-export THEOS = /opt/theos
+export THEOS = $(HOME)/theos
 ARCHS = arm64
 TARGET := iphone:clang:latest:15.0
 
