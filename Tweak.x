@@ -3,10 +3,8 @@
 void checkLicense(NSString *userKey) {
     NSString *deviceId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     
-    // --- BƯỚC QUAN TRỌNG: DÁN LINK CỦA BẠN VÀO GIỮA HAI DẤU " " Ở DÒNG DƯỚI DẤU ---
+    // THAY LINK GOOGLE SCRIPT CỦA BẠN VÀO DÒNG DƯỚI ĐÂY
     NSString *yourScriptUrl = @"https://script.google.com/macros/s/AKfycbykXu0eesXx8WdPwPnOQrIM7qZSYmcoz16rtH5stDJNuEv8Nn7YXQgEGMCRRfEbZh503w/exec";
-    
-    // --- KHÔNG ĐƯỢC SỬA ĐOẠN CODE PHÍA DƯỚI ---
     
     NSString *server = [NSString stringWithFormat:@"%@?key=%@&udid=%@", yourScriptUrl, userKey, deviceId];
     NSURL *url = [NSURL URLWithString:server];
@@ -25,21 +23,22 @@ void checkLicense(NSString *userKey) {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         UIWindow *window = nil;
         if (@available(iOS 13.0, *)) {
-            for (UIWindowScene* windowScene in [UIApplication sharedApplication].connectedScenes) {
-                if (windowScene.activationState == UISceneActivationStateForegroundActive) {
-                    window = windowScene.windows.firstObject;
+            NSSet *scenes = [[UIApplication sharedApplication] connectedScenes];
+            for (UIScene *scene in scenes) {
+                if ([scene isKindOfClass:[UIWindowScene class]] && scene.activationState == UISceneActivationStateForegroundActive) {
+                    window = ((UIWindowScene *)scene).windows.firstObject;
                     break;
                 }
             }
         } else {
-            window = [UIApplication sharedApplication].keyWindow;
+            window = [[UIApplication sharedApplication] keyWindow];
         }
 
         if (!window) return;
 
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"XÁC THỰC" message:@"Vui lòng nhập Key quản lý" preferredStyle:UIAlertControllerStyleAlert];
         [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) { tf.placeholder = @"Nhập Key..."; tf.secureTextEntry = YES; }];
-        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(id act) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"KÍCH HOẠT" style:UIAlertActionStyleDefault handler:^(id act) {
             checkLicense(alert.textFields.firstObject.text);
         }]];
 
