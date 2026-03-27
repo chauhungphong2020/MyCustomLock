@@ -7,5 +7,6 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = MyCustomLock
 MyCustomLock_FILES = Tweak.x
 MyCustomLock_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
+MyCustomLock_FRAMEWORKS = UIKit
 
 include $(THEOS)/makefiles/tweak.mk
