@@ -1,0 +1,6 @@
+Package: com.yourname.customlock
+Name: MyCustomLock
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Server Key Lock for iOS 16
