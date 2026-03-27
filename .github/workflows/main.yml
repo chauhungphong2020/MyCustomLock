@@ -1,0 +1,24 @@
+name: Build My Dylib
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          echo "THEOS=~/theos" >> $GITHUB_ENV
+          echo "~/theos/bin" >> $GITHUB_PATH
+
+      - name: Build Dylib
+        run: |
+          make package FINALPACKAGE=1
+          
+      - name: Save Dylib
+        uses: actions/upload-artifact@v3
+        with:
+          name: MyDylibFile
+          path: .theos/obj/debug/*.dylib
