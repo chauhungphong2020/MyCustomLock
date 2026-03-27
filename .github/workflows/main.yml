@@ -25,4 +25,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MyDylibFile
-          path: .theos/obj/debug/*.dylib
+          path: |
+            .theos/obj/*.dylib
+            .theos/obj/debug/*.dylib
+            packages/*.deb
