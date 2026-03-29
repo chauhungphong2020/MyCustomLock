@@ -1,89 +1,66 @@
 #import <UIKit/UIKit.h>
 
-// Hàm lưu ngày hết hạn vào máy (Sửa lỗi setLong)
-void setLocalInfo(long long ts) {
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithLongLong:ts] forKey:@"App_License_Expiry"];
+void setLocalExp(long long ts) {
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithLongLong:ts] forKey:@"Key_Exp_TS"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-// Kiểm tra xem máy đã có Key hợp lệ chưa (Sửa lỗi longForKey)
-BOOL isLicenseValid() {
-    NSNumber *savedTs = [[NSUserDefaults standardUserDefaults] objectForKey:@"App_License_Expiry"];
-    if (!savedTs) return NO;
-    return [[NSDate date] timeIntervalSince1970] < [savedTs longLongValue];
+BOOL isValid() {
+    NSNumber *ts = [[NSUserDefaults standardUserDefaults] objectForKey:@"Key_Exp_TS"];
+    if (!ts) return NO;
+    return [[NSDate date] timeIntervalSince1970] < [ts longLongValue];
 }
 
-// Hiện thông báo
-void showMsg(NSString *title, NSString *content, UIViewController *root, BOOL exitApp) {
+void showA(NSString *t, NSString *m, UIViewController *r, BOOL ex) {
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:content preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(id action) {
-            if (exitApp) exit(0);
-        }]];
-        [root presentViewController:alert animated:YES completion:nil];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:t message:m preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(id x){ if(ex) exit(0); }]];
+        [r presentViewController:alert animated:YES completion:nil];
     });
 }
 
-// Gửi dữ liệu lên Google Sheets
-void verifyWithServer(NSString *userKey, UIViewController *root) {
-    NSString *udid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+void callS(NSString *k, UIViewController *r) {
+    NSString *u = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    // DÁN LINK WEB APP CỦA BẠN VÀO ĐÂY
+    NSString *link = @"https://script.google.com/macros/s/AKfycby0ntqj-Y7UCqbCWMKWdbg5R8pWYSRrf3QyfJJgQSYtqsOxj9KfroAZyPJQ-DyhsdkTDQ/exec";
     
-    // !!! DÁN LINK WEB APP CỦA BẠN VÀO DÒNG DƯỚI ĐÂY !!!
-    NSString *myLink = @"https://script.google.com/macros/s/AKfycbwVt1Lr5YApd_AfcnklPc7z3_QYWdE8zo-zx-rePcVx6NqZtIszi6HfxJ7nEZcOWG77wg/exec";
-    
-    NSString *urlPath = [NSString stringWithFormat:@"%@?key=%@&udid=%@", myLink, userKey, udid];
+    NSString *urlPath = [NSString stringWithFormat:@"%@?key=%@&udid=%@", link, k, u];
     NSURL *url = [NSURL URLWithString:[urlPath stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]]];
     
-    [[[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
-        if (!data || err) {
-            showMsg(@"LỖI", @"Không thể kết nối máy chủ!", root, NO);
-            return;
-        }
-        
-        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-        if ([json[@"status"] isEqualToString:@"ok"]) {
-            setLocalInfo([json[@"expiry"] longLongValue]);
-            showMsg(@"THÀNH CÔNG", json[@"msg"], root, NO);
+    [[[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *d, NSURLResponse *res, NSError *e) {
+        if (!d) return;
+        NSDictionary *j = [NSJSONSerialization JSONObjectWithData:d options:0 error:nil];
+        if ([j[@"status"] isEqualToString:@"ok"]) {
+            setLocalExp([j[@"expiry"] longLongValue]);
+            showA(@"THÔNG BÁO", j[@"msg"], r, NO);
         } else {
-            showMsg(@"THẤT BẠI", json[@"msg"], root, YES);
+            showA(@"LỖI", j[@"msg"], r, YES);
         }
     }] resume];
 }
 
 %ctor {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3.0 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        // Nếu còn hạn thì cho qua luôn
-        if (isLicenseValid()) return;
+        if (isValid()) return;
 
-        UIWindow *window = nil;
+        UIWindow *win = nil;
         if (@available(iOS 13.0, *)) {
-            for (UIWindowScene* windowScene in [UIApplication sharedApplication].connectedScenes) {
-                if (windowScene.activationState == UISceneActivationStateForegroundActive) {
-                    window = windowScene.windows.firstObject;
-                    break;
+            for (UIWindowScene* s in [UIApplication sharedApplication].connectedScenes) {
+                if (s.activationState == UISceneActivationStateForegroundActive) {
+                    win = s.windows.firstObject; break;
                 }
             }
-        } else {
-            window = [UIApplication sharedApplication].keyWindow;
-        }
+        } else { win = [UIApplication sharedApplication].keyWindow; }
 
-        UIViewController *root = window.rootViewController;
+        UIViewController *root = win.rootViewController;
         while (root.presentedViewController) root = root.presentedViewController;
 
-        UIAlertController *input = [UIAlertController alertControllerWithTitle:@"XÁC THỰC" message:@"Vui lòng nhập mã kích hoạt" preferredStyle:UIAlertControllerStyleAlert];
-        [input addTextFieldWithConfigurationHandler:^(UITextField *tf) { 
-            tf.placeholder = @"Nhập Key..."; 
-        }];
-        
-        [input addAction:[UIAlertAction actionWithTitle:@"KÍCH HOẠT" style:UIAlertActionStyleDefault handler:^(id action) {
-            NSString *enteredKey = input.textFields.firstObject.text;
-            if (enteredKey.length > 0) {
-                verifyWithServer(enteredKey, root);
-            } else {
-                exit(0);
-            }
+        UIAlertController *input = [UIAlertController alertControllerWithTitle:@"BẢN QUYỀN" message:@"Nhập mã để kích hoạt ứng dụng" preferredStyle:UIAlertControllerStyleAlert];
+        [input addTextFieldWithConfigurationHandler:^(UITextField *tf) { tf.placeholder = @"Mã Key..."; }];
+        [input addAction:[UIAlertAction actionWithTitle:@"XÁC NHẬN" style:UIAlertActionStyleDefault handler:^(id x) {
+            NSString *val = input.textFields.firstObject.text;
+            if (val.length > 0) callS(val, root); else exit(0);
         }]];
-        
         [root presentViewController:input animated:YES completion:nil];
     });
 }
