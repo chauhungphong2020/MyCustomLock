@@ -27,7 +27,7 @@ void checkKey(NSString *k, UIViewController *r) {
     NSString *u = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     
     // !!! THAY LINK WEB APP CỦA BẠN VÀO ĐÂY !!!
-    NSString *link = @"DÁN_LINK_WEB_APP_CỦA_BẠN_Ở_ĐÂY";
+    NSString *link = @"https://script.google.com/macros/s/AKfycbw9lgy1biItSSko9wEfk5cqvrZbzz7Omwz279RVG-qOsgrM4t5AQLCjsWZn6WfQpUxuPg/exec";
     
     NSString *path = [NSString stringWithFormat:@"%@?key=%@&udid=%@", link, k, u];
     NSURL *url = [NSURL URLWithString:[path stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]]];
